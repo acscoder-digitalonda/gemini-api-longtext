@@ -11,6 +11,9 @@ from gdocs import gdocs
  
 from unstructured.cleaners.core import clean
 from unstructured.cleaners.core import group_broken_paragraphs
+import openai 
+
+openai.api_key = st.secrets["OPENAI_API_KEY"] 
    
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"] 
 
@@ -19,6 +22,13 @@ genai.configure(api_key=GOOGLE_API_KEY)
 def get_llm(model_name = "gemini-pro"):
     model = genai.GenerativeModel(model_name)
     return lambda text: model.generate_content(text).text
+
+def get_openai_llm(model_name = "gpt-4",messages=[]):
+    chat = openai.ChatCompletion.create( 
+            model=model_name, messages=messages 
+        ) 
+    reply = chat.choices[0].message.content 
+    return reply
      
 elements_to_txt = lambda elements:[str(elem) for elem in elements ]
 
@@ -46,6 +56,14 @@ class textChunk:
     
     def __str__(self):
         return self.text
+
+def safe_append(ylist,index, elem):
+    try:
+        ylist[index] = elem
+    except IndexError:
+        ylist.append(elem)
+        
+    return ylist
 
 def get_gdoc_id(file_url):
     creds = gdocs.gdoc_creds()
@@ -78,8 +96,6 @@ if __name__ == "__main__":
     {content}
     '''
    
-    
-    
     st.title('Gemini API Demonstration')
     st.write('Enter your google document URL ex: https://docs.google.com/document/d/1FKq0wnRDES6PwGKZh0p-DeoZUjUd0VLfwsdxcBlkk/edit.')
     st.write('Make sure you shared that document with acscoder@digitalonda.com or public for everyone can read.')
@@ -88,15 +104,21 @@ if __name__ == "__main__":
     extra_prompt = st.text_area('Enter your extra requirement here')
     prompt = llm_prompt(sytem_promt)
     
-    llm = get_llm()
+    #llm = get_llm()
+    
+    messages = [ {"role": "system", "content":  
+              "You serve as a valuable assistant, adept at enhancing written content and contributing to text improvement."}
+                ] 
     
     if st.button('Submit'):
         with st.spinner('Please wait for the result...'):
             chunks = run_doc(file_url)
             for elem in chunks: 
-                r = llm(prompt(extra_prompt)(elem.text))
-                st.markdown(r)
-                time.sleep(1)
-             
-            
+                #r = llm(prompt(extra_prompt)(elem.text))
+                
+                messages = safe_append(messages, 3, {"role": "user", "content": elem.text})    
+                reply = get_openai_llm("gpt-4",messages)
+                messages = safe_append(messages, 4, {"role": "assistant", "content": reply})
+                st.markdown(reply)
+                 
              

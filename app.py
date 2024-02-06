@@ -4,16 +4,16 @@ import tiktoken
 import google.generativeai as genai
 
 import textwrap
-
+import openai 
 from dotenv import load_dotenv
 load_dotenv()
 
 from gdocs import gdocs
-
  
 from unstructured.cleaners.core import clean
 from unstructured.cleaners.core import group_broken_paragraphs
    
+openai.api_key = os.environ.get("OPENAI_API_KEY")   
 GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY')
 genai.configure(api_key=GOOGLE_API_KEY)
   
@@ -23,8 +23,16 @@ def get_llm(model_name = "gemini-pro"):
      
 elements_to_txt = lambda elements:[str(elem) for elem in elements ]
 
-broken_paragraphs = lambda text: group_broken_paragraphs(text, paragraph_split=re.compile(r"(\s*\n\s*){3}"))   
-         
+broken_paragraphs = lambda text: group_broken_paragraphs(text, paragraph_split=re.compile(r"(\s*\n\s*){3}"))  
+ 
+def get_openai_llm(model_name = "gpt-4",messages=[]):
+    chat = openai.ChatCompletion.create( 
+            model=model_name, messages=messages 
+        ) 
+    reply = chat.choices[0].message.content 
+    return reply
+    
+        
 class textChunk:
     text_chunk_length = 4000
     encoding_name = "cl100k_base" 
@@ -68,27 +76,43 @@ def run_doc(file_url):
             textChunkList.append(textChunk(text=text))
     return textChunkList
     
-def llm_prompt(sytem_promt):
-    return lambda extra_promt:lambda text: sytem_promt.format(extra_promt=extra_promt,content=text) 
+def llm_prompt(sytem_prompt):
+    return lambda extra_prompt:lambda text: sytem_prompt.format(extra_prompt=extra_prompt,content=text) 
+    
+def safe_append(ylist,index, elem):
+    try:
+        ylist[index] = elem
+    except IndexError:
+        ylist.append(elem)
+        
+    return ylist
     
 if __name__ == "__main__":
-    extra_promt = ""
-    sytem_promt = '''You serve as a valuable assistant, adept at enhancing written content and contributing to text improvement.
-    {extra_promt}
+    extra_prompt = ""
+    sytem_prompt = '''You serve as a valuable assistant, adept at enhancing written content and contributing to text improvement.
+    {extra_prompt}
     Here the content:
     {content}
     '''
-    prompt = llm_prompt(sytem_promt)
+    prompt = llm_prompt(sytem_prompt)
     
     llm = get_llm()
-    
+     
     file_url = "https://docs.google.com/document/d/1SoGoM9gyVraVwMReC0XCa0DQgLJziS2oz3jdt_Jjcws/edit?usp=sharing" 
     chunks = run_doc(file_url)
-    resp = []
-    for elem in chunks: 
-        print(elem.text)
+    
+   
+    messages = [ {"role": "system", "content":  
+              "You serve as a valuable assistant, adept at enhancing written content and contributing to text improvement."}
+                ] 
+    for index,elem in enumerate(chunks): 
+        messages = safe_append(messages, 3, {"role": "user", "content": elem.text})    
+        #reply = get_openai_llm("gpt-4",messages)
+        #messages = safe_append(messages, 4, {"role": "assistant", "content": reply})
+          
+        print(messages)         
+                
         print("-----------------------------------------------------------------")
-        #resp.append(llm(prompt(extra_promt)(elem.text)))
-        
-    print(len(chunks))
+         
+    
     
