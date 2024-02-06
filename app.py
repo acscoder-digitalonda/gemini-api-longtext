@@ -2,8 +2,11 @@ import os
 import re
 import tiktoken
 import google.generativeai as genai
-import streamlit as st
+
 import textwrap
+
+from dotenv import load_dotenv
+load_dotenv()
 
 from gdocs import gdocs
 
@@ -11,8 +14,7 @@ from gdocs import gdocs
 from unstructured.cleaners.core import clean
 from unstructured.cleaners.core import group_broken_paragraphs
    
-GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"] 
-
+GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY')
 genai.configure(api_key=GOOGLE_API_KEY)
   
 def get_llm(model_name = "gemini-pro"):
@@ -70,31 +72,23 @@ def llm_prompt(sytem_promt):
     return lambda extra_promt:lambda text: sytem_promt.format(extra_promt=extra_promt,content=text) 
     
 if __name__ == "__main__":
-     
+    extra_promt = ""
     sytem_promt = '''You serve as a valuable assistant, adept at enhancing written content and contributing to text improvement.
     {extra_promt}
     Here the content:
     {content}
     '''
-   
-    
-    
-    st.title('Gemini API Demonstration')
-    st.write('Enter your google document URL ex: https://docs.google.com/document/d/1FKq0wnRDES6PwGKZh0p-DeoZUjUd0VLfwsdxcBlkk/edit.')
-    st.write('Make sure you shared that document with acscoder@digitalonda.com or public for everyone can read.')
-    
-    file_url = st.text_input('Enter your google docs URL')
-    extra_prompt = st.text_area('Enter your extra requirement here')
     prompt = llm_prompt(sytem_promt)
     
     llm = get_llm()
     
-    if st.button('Submit'):
-        with st.spinner('Please wait for the result...'):
-            resp = [] 
-            chunks = run_doc(file_url)
-            for elem in chunks: 
-                resp.append(llm(prompt(extra_prompt)(elem.text))) 
-            st.write('Here is your result:\n ')
-            st.markdown('\n'.join(resp))
-             
+    file_url = "https://docs.google.com/document/d/1SoGoM9gyVraVwMReC0XCa0DQgLJziS2oz3jdt_Jjcws/edit?usp=sharing" 
+    chunks = run_doc(file_url)
+    resp = []
+    for elem in chunks: 
+        print(elem.text)
+        print("-----------------------------------------------------------------")
+        #resp.append(llm(prompt(extra_promt)(elem.text)))
+        
+    print(len(chunks))
+    

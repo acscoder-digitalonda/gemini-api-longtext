@@ -4,6 +4,7 @@ import tiktoken
 import google.generativeai as genai
 import streamlit as st
 import textwrap
+import time
 
 from gdocs import gdocs
 
@@ -91,10 +92,11 @@ if __name__ == "__main__":
     
     if st.button('Submit'):
         with st.spinner('Please wait for the result...'):
-            resp = [] 
             chunks = run_doc(file_url)
             for elem in chunks: 
-                resp.append(llm(prompt(extra_prompt)(elem.text))) 
-            st.write('Here is your result:\n ')
-            st.markdown('\n'.join(resp))
+                r = llm(prompt(extra_prompt)(elem.text))
+                st.markdown(r)
+                time.sleep(1)
+             
+            
              
