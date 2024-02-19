@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from gdocs import gdocs
+import time
  
 from unstructured.cleaners.core import clean
 from unstructured.cleaners.core import group_broken_paragraphs
@@ -107,11 +108,9 @@ if __name__ == "__main__":
                 ] 
     for index,elem in enumerate(chunks): 
         messages = safe_append(messages, 3, {"role": "user", "content": elem.text})    
-        #reply = get_openai_llm("gpt-4",messages)
-        #messages = safe_append(messages, 4, {"role": "assistant", "content": reply})
-          
-        print(messages)         
-                
+        reply = get_openai_llm("gpt-4",messages)
+        messages = safe_append(messages, 2, {"role": "assistant", "content": reply})
+        time.sleep(1000)  
         print("-----------------------------------------------------------------")
          
     

@@ -118,7 +118,9 @@ if __name__ == "__main__":
                 
                 messages = safe_append(messages, 3, {"role": "user", "content": elem.text})    
                 reply = get_openai_llm("gpt-4",messages)
-                messages = safe_append(messages, 4, {"role": "assistant", "content": reply})
+                messages = safe_append(messages, 2, {"role": "assistant", "content": reply})
                 st.markdown(reply)
+                
+                time.sleep(1000)
                  
              
