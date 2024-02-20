@@ -107,10 +107,11 @@ if __name__ == "__main__":
               "You serve as a valuable assistant, adept at enhancing written content and contributing to text improvement."}
                 ] 
     for index,elem in enumerate(chunks): 
-        messages = safe_append(messages, 3, {"role": "user", "content": elem.text})    
+        messages = safe_append(messages, 1, {"role": "user", "content": elem.text})    
         reply = get_openai_llm("gpt-4",messages)
-        messages = safe_append(messages, 2, {"role": "assistant", "content": reply})
-        time.sleep(1000)  
+        #messages = safe_append(messages, 2, {"role": "assistant", "content": reply})
+        #time.sleep(1000)
+        print(reply)  
         print("-----------------------------------------------------------------")
          
     

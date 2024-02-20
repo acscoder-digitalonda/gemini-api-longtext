@@ -19,7 +19,7 @@ GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 
 genai.configure(api_key=GOOGLE_API_KEY)
   
-def get_llm(model_name = "gemini-pro"):
+def get_gemini_llm(model_name = "gemini-pro"):
     model = genai.GenerativeModel(model_name)
     return lambda text: model.generate_content(text).text
 
@@ -102,9 +102,9 @@ if __name__ == "__main__":
     
     file_url = st.text_input('Enter your google docs URL')
     extra_prompt = st.text_area('Enter your extra requirement here')
-    prompt = llm_prompt(sytem_promt)
+    prompt = llm_prompt(sytem_promt)(extra_prompt)
     
-    #llm = get_llm()
+    gemini_llm = get_gemini_llm()
     
     messages = [ {"role": "system", "content":  
               "You serve as a valuable assistant, adept at enhancing written content and contributing to text improvement."}
@@ -114,12 +114,12 @@ if __name__ == "__main__":
         with st.spinner('Please wait for the result...'):
             chunks = run_doc(file_url)
             for elem in chunks: 
-                #r = llm(prompt(extra_prompt)(elem.text))
+                r = gemini_llm(prompt(elem.text))
                 
-                messages = safe_append(messages, 3, {"role": "user", "content": elem.text})    
-                reply = get_openai_llm("gpt-4",messages)
-                messages = safe_append(messages, 2, {"role": "assistant", "content": reply})
-                st.markdown(reply)
+                messages = safe_append(messages, 1, {"role": "user", "content": elem.text})    
+                #reply = get_openai_llm("gpt-4",messages)
+               
+                st.markdown(r)
                 
                 time.sleep(1000)
                  
